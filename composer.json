@@ -1,0 +1,19 @@
+{
+    "name": "jonathanrixhon/cli-workspace-switcher",
+    "description": "A package to make my workflow faster",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Jonathanrixhon\\CliWorkspaceSwitcher\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Jonathan Rixhon",
+            "email": "jonathan.rixhon@hotmail.com"
+        }
+    ],
+    "require": {
+        "symfony/console": "^6.2"
+    }
+}
