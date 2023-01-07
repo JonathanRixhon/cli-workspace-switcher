@@ -1,4 +1,5 @@
 <?php
+
 namespace Jonathanrixhon\CliWorkspaceSwitcher\Commands\Workspaces;
 
 use Jonathanrixhon\CliWorkspaceSwitcher\File;
@@ -9,10 +10,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use Jonathanrixhon\CliWorkspaceSwitcher\Services\InputOutput;
 use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasMultipleChoice;
+use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasWorkspaceMethods;
 
 class WorkspaceConfig extends Command
 {
-    use HasMultipleChoice;
+    use HasMultipleChoice, HasWorkspaceMethods;
+
     protected $configFile;
     protected $input;
     protected $output;
@@ -92,7 +95,11 @@ class WorkspaceConfig extends Command
                 return Command::FAILURE;
             }
 
-            $this->addWorkSpace([$name => $path]);
+            $this->addWorkSpace([
+                'name' => $name,
+                'path' => $path,
+            ]);
+
             $stop = !$this->io->confirm('Add more workspaces ?');
         }
     }
@@ -100,7 +107,17 @@ class WorkspaceConfig extends Command
     public function addWorkSpace($workspace)
     {
         $jsonContent = getConfig();
-        $jsonContent['workspaces'] = array_merge($jsonContent['workspaces'] ?? [], $workspace);
+        $workspaces = $jsonContent['workspaces'] ?? [];
+        $this->searchForWorkspaceName($workspace['name']);
+        $index = $this->searchForWorkspaceName($workspace['name']);
+
+        if (!is_null($index)) {
+            $workspaces[$index] = $workspace;
+        } else {
+            $workspaces[] = $workspace;
+        }
+
+        $jsonContent['workspaces'] = $workspaces;
         $this->save($jsonContent);
     }
 
@@ -110,7 +127,7 @@ class WorkspaceConfig extends Command
         $this->io->title($title);
 
         $workspaces = getConfig()['workspaces'];
-        $this->removeWorkspace($this->multiChoice('Please choose a wokspace to remove', [...$workspaces, 'Cancel' => false]));
+        $this->removeWorkspace($this->multiChoice('Please choose a wokspace to remove', [...array_column($workspaces, 'name'), 'Cancel']));
     }
 
     protected function reset()
@@ -135,7 +152,7 @@ class WorkspaceConfig extends Command
             $this->save($jsonContent);
             return $this->io->right(sprintf('All workspaces removed successfully', $workspace));
         } else {
-            unset($jsonContent['workspaces'][$workspace]);
+            unset($jsonContent['workspaces'][$this->searchForWorkspaceName($workspace)]);
             $this->save($jsonContent);
             return $this->io->right(sprintf('The workspace %s has been deleted successfully', $workspace));
         };
@@ -147,18 +164,5 @@ class WorkspaceConfig extends Command
         $file = fopen($this->configFile->getPathName(), 'w');
         fwrite($file, json_encode($jsonContent));
         fclose($file);
-    }
-
-    protected function multiChoice($message, $choices)
-    {
-        $question = new ChoiceQuestion(
-            $message,
-            array_keys($choices),
-            0
-        );
-
-        $question->setAutocompleterValues(array_keys($choices));
-        $helper = $this->getHelper('question');
-        return $helper->ask($this->input, $this->output, $question);
     }
 }

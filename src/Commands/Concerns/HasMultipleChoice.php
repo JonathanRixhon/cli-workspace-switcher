@@ -10,7 +10,7 @@ trait HasMultipleChoice
     {
         $question = new ChoiceQuestion(
             $message,
-            array_keys($choices),
+            array_values($choices),
             0
         );
 
