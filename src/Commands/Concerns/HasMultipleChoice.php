@@ -6,8 +6,10 @@ use Symfony\Component\Console\Question\ChoiceQuestion;
 
 trait HasMultipleChoice
 {
-    protected function multiChoice($message, $choices)
+    protected function multiChoice($message, $choices, $hasCancel = false)
     {
+        if ($hasCancel) $choices[] = 'Cancel';
+
         $question = new ChoiceQuestion(
             $message,
             array_values($choices),

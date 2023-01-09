@@ -127,7 +127,7 @@ class WorkspaceConfig extends Command
         $this->io->title($title);
 
         $workspaces = getConfig()['workspaces'];
-        $this->removeWorkspace($this->multiChoice('Please choose a wokspace to remove', [...array_column($workspaces, 'name'), 'Cancel']));
+        $this->removeWorkspace($this->multiChoice('Please choose a wokspace to remove', getOnlyKeys($workspaces, 'name'), true));
     }
 
     protected function reset()
