@@ -17,12 +17,13 @@ class WorkspaceOpen extends Command
     protected $input;
     protected $output;
     protected $currentWorkspace;
+    protected $workspaces;
     /**
      * The name of the command (the part after "bin/demo").
      *
      * @var string
      */
-    protected static $defaultName = 'workspace:open';
+    protected static $defaultName = 'workspace';
 
     /**
      * The command description shown when running "php bin/demo list".
@@ -43,17 +44,17 @@ class WorkspaceOpen extends Command
         $this->input = $input;
         $this->output = $output;
         $this->io = new InputOutput($this->input, $this->output);
-        $workspaces = getConfig()['workspaces'] ?? [];
-        $workspaceName = $this->multiChoice('Which Workspace do you want to open ?', getOnlyKeys($workspaces, 'name'), true);
+        $this->workspaces = getConfig()['workspaces'] ?? [];
+
+        $workspaceName = $this->multiChoice('Which Workspace do you want to open ?', getOnlyKeys($this->workspaces, 'name'), true);
+        $this->openDirectory($workspaceName);
+
         if ($workspaceName === 'Cancel') {
             $this->io->wrong('Command cancelled');
             return Command::FAILURE;
         };
-        $directories = $this->getWorkspaceDirectories($workspaces[$this->searchForWorkspaceName($workspaceName)]['path']);
 
-        $directoryName = $this->multiChoice('Which directory do you want to open ?', $directories->choices);
 
-        $this->work($directories->all[$directories->indexes[$directoryName]]->getPathname());
         return Command::SUCCESS;
     }
 }

@@ -7,7 +7,7 @@ use stdClass;
 
 trait HasWorkspaceMethods
 {
-    function getWorkspaceDirectories($path)
+    public function getWorkspaceDirectories($path)
     {
         if (!$path) return null;
         $directories = new stdClass();
@@ -25,7 +25,7 @@ trait HasWorkspaceMethods
         return $directories;
     }
 
-    function searchForWorkspaceName($name)
+    public function searchForWorkspaceName($name)
     {
         foreach (getConfig()['workspaces'] ?? [] as $key => $workspace) {
             if ($workspace['name'] === $name) {
@@ -49,8 +49,16 @@ trait HasWorkspaceMethods
     {
     }
 
+    public function openDirectory($workspaceName)
+    {
+        $directories = $this->getWorkspaceDirectories($this->workspaces[$this->searchForWorkspaceName($workspaceName)]['path']);
+        $directoryName = $this->multiChoice('Which directory do you want to open ?', $directories->choices);
+        $this->work($directories->all[$directories->indexes[$directoryName]]->getPathname());
+    }
+
     public function work($path)
     {
         shell_exec(sprintf('code -n %s', $path));
+        shell_exec(sprintf('open -a iTerm %s', $path));
     }
 }

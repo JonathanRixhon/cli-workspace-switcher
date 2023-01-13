@@ -1,2 +1,2 @@
 <?php
-require_once './bin/demo.php';
+require_once 'bin/demo.php';
