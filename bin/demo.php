@@ -7,7 +7,6 @@ if (!is_file(sprintf('%s/vendor/autoload.php', $GLOBALS['root']))) {
 }
 
 require sprintf('%s/vendor/autoload.php', $GLOBALS['root']);
-include sprintf('%s/src/helpers.php', $GLOBALS['root']);
 
 use Symfony\Component\Console\Application;
 use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Workspaces\WorkspaceList;

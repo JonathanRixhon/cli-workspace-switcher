@@ -45,17 +45,6 @@ trait HasWorkspaceMethods
         return $workspaces[$found_key];
     }
 
-    public function getDirectoryByName($directories, $name)
-    {
-    }
-
-    public function openDirectory($workspaceName)
-    {
-        $directories = $this->getWorkspaceDirectories($this->workspaces[$this->searchForWorkspaceName($workspaceName)]['path']);
-        $directoryName = $this->multiChoice('Which directory do you want to open ?', $directories->choices);
-        $this->work($directories->all[$directories->indexes[$directoryName]]->getPathname());
-    }
-
     public function work($path)
     {
         shell_exec(sprintf('code -n %s', $path));

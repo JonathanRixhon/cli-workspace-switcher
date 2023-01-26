@@ -12,11 +12,11 @@ trait HasMultipleChoice
 
         $question = new ChoiceQuestion(
             $message,
-            array_values($choices),
+            $choices,
             0
         );
 
-        $question->setAutocompleterValues(array_keys($choices));
+        $question->setAutocompleterValues($choices);
         $helper = $this->getHelper('question');
         return $helper->ask($this->input, $this->output, $question);
     }

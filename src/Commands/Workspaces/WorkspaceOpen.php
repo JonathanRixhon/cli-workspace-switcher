@@ -2,12 +2,14 @@
 
 namespace Jonathanrixhon\CliWorkspaceSwitcher\Commands\Workspaces;
 
-use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasMultipleChoice;
-use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasWorkspaceMethods;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Jonathanrixhon\CliWorkspaceSwitcher\Models\Directory;
+use Jonathanrixhon\CliWorkspaceSwitcher\Models\Workspace;
 use Jonathanrixhon\CliWorkspaceSwitcher\Services\InputOutput;
+use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasMultipleChoice;
+use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasWorkspaceMethods;
 
 class WorkspaceOpen extends Command
 {
@@ -44,15 +46,20 @@ class WorkspaceOpen extends Command
         $this->input = $input;
         $this->output = $output;
         $this->io = new InputOutput($this->input, $this->output);
-        $this->workspaces = getConfig()['workspaces'] ?? [];
 
-        $workspaceName = $this->multiChoice('Which Workspace do you want to open ?', getOnlyKeys($this->workspaces, 'name'), true);
-        $this->openDirectory($workspaceName);
+        $workspaceName = $this->multiChoice('Which workspace do you want to open ?', Workspace::only('name'), true);
+        $workspace = Workspace::get($workspaceName);
 
         if ($workspaceName === 'Cancel') {
             $this->io->wrong('Command cancelled');
             return Command::FAILURE;
         };
+
+        $directoryName = $this->multiChoice('Which directory do you want to open ?', Directory::only('name', null, $workspace->path), true);
+        $directory = Directory::get($workspace->path, $directoryName);
+
+        $directory->open();
+
 
 
         return Command::SUCCESS;

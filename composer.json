@@ -3,6 +3,9 @@
     "description": "A package to make my workflow faster",
     "type": "library",
     "autoload": {
+        "files": [
+            "./src/helpers.php"
+        ],
         "psr-4": {
             "Jonathanrixhon\\CliWorkspaceSwitcher\\": "src/"
         }
