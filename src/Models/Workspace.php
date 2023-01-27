@@ -3,6 +3,7 @@
 namespace Jonathanrixhon\CliWorkspaceSwitcher\Models;
 
 use Jonathanrixhon\CliWorkspaceSwitcher\File;
+use Jonathanrixhon\CliWorkspaceSwitcher\Items\Directory;
 use Jonathanrixhon\CliWorkspaceSwitcher\Items\Workspace as WorkspaceItem;
 
 class Workspace
@@ -49,6 +50,19 @@ class Workspace
         return true;
     }
 
+    public static function ignore(string $workspaceName, Directory $directory)
+    {
+        $workspace = self::get($workspaceName);
+        $jsonContent = getConfig();
+
+        $jsonContent['workspaces'][$workspace->id]['ignored'][] = [
+            'name' => $directory->name,
+            'path' => $directory->path,
+        ];
+
+        self::save($jsonContent);
+    }
+
     public static function create($workspace = [])
     {
         $jsonContent = getConfig();
@@ -65,7 +79,7 @@ class Workspace
         self::save($jsonContent);
     }
 
-    protected static function save($newJson)
+    public static function save($newJson)
     {
         $jsonContent = array_merge($jsonContent ?? [], $newJson);
         $file = fopen(self::getconfigFile()->getPathName(), 'w');

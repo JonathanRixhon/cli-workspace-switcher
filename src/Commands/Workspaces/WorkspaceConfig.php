@@ -8,14 +8,14 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
+use Jonathanrixhon\CliWorkspaceSwitcher\Models\Directory;
 use Jonathanrixhon\CliWorkspaceSwitcher\Models\Workspace;
 use Jonathanrixhon\CliWorkspaceSwitcher\Services\InputOutput;
 use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasMultipleChoice;
-use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasWorkspaceMethods;
 
 class WorkspaceConfig extends Command
 {
-    use HasMultipleChoice, HasWorkspaceMethods;
+    use HasMultipleChoice;
 
     protected $configFile;
     protected $input;
@@ -26,6 +26,7 @@ class WorkspaceConfig extends Command
     protected $authorizedActions = [
         'add',
         'ignore',
+        'removeIgnored',
         'reset',
         'remove',
     ];
@@ -135,6 +136,45 @@ class WorkspaceConfig extends Command
     {
         $title = 'This command allows you to ignore certain files or directories';
         $this->io->title($title);
+        $stop = false;
 
+        $workspaceName = $this->multiChoice('Please choose a wokspace you want to configure', Workspace::only('name'), true);
+        if ($workspaceName === 'Cancel') return $this->io->text('Command cancelled');
+
+        while (!$stop) {
+            $workspace = Workspace::get($workspaceName);
+
+            $directoryName = $this->multiChoice('Which directory do you want to ignore', Directory::only('name', null, $workspace), true);
+            if ($directoryName === 'Cancel') return $this->io->text('Command cancelled');
+            $directory = Directory::get($workspace, $directoryName);
+            Workspace::ignore($workspaceName, $directory);
+
+            $stop = !$this->io->confirm('You want to add more workspace to ignore ?');
+        }
+    }
+    protected function removeIgnored()
+    {
+        $title = 'This command allows you to remove ignored directories or files';
+        $this->io->title($title);
+        $stop = false;
+
+        $workspaceName = $this->multiChoice('Please choose a wokspace you want to remove ignored directories or files', Workspace::only('name'), true);
+        if ($workspaceName === 'Cancel') return $this->io->text('Command cancelled');
+
+        while (!$stop) {
+            $workspace = Workspace::get($workspaceName);
+
+            $ignoredName = $this->multiChoice('Please choose a wokspace you want to remove ignored directories or files', array_column($workspace->ignored, 'name'), true);
+            if ($ignoredName === 'Cancel') return $this->io->text('Command cancelled');
+            $workspace->removeIgnored($ignoredName);
+
+            $stop = !$this->io->confirm('You want to remove workspaces from the ignored ones ?');
+        }
+
+
+        //$ignored = $this->multiChoice('Which directory do you want to remove from ignored', Directory::only('ignored', null, $workspace), true);
+        //if ($directoryName === 'Cancel') return $this->io->text('Command cancelled');
+        //$directory = Directory::get($workspace, $directoryName);
+        //Workspace::removeIgnored($workspace);
     }
 }

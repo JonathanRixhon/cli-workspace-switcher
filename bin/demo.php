@@ -9,9 +9,10 @@ if (!is_file(sprintf('%s/vendor/autoload.php', $GLOBALS['root']))) {
 require sprintf('%s/vendor/autoload.php', $GLOBALS['root']);
 
 use Symfony\Component\Console\Application;
+use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Workspaces\WorkspaceEdit;
 use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Workspaces\WorkspaceList;
-use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Workspaces\WorkspaceConfig;
 use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Workspaces\WorkspaceOpen;
+use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Workspaces\WorkspaceConfig;
 
 $application = new Application();
 

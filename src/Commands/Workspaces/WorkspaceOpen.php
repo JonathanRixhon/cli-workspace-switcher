@@ -9,11 +9,10 @@ use Jonathanrixhon\CliWorkspaceSwitcher\Models\Directory;
 use Jonathanrixhon\CliWorkspaceSwitcher\Models\Workspace;
 use Jonathanrixhon\CliWorkspaceSwitcher\Services\InputOutput;
 use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasMultipleChoice;
-use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasWorkspaceMethods;
 
 class WorkspaceOpen extends Command
 {
-    use HasMultipleChoice, HasWorkspaceMethods;
+    use HasMultipleChoice;
 
     protected $io;
     protected $input;
@@ -55,8 +54,8 @@ class WorkspaceOpen extends Command
             return Command::FAILURE;
         };
 
-        $directoryName = $this->multiChoice('Which directory do you want to open ?', Directory::only('name', null, $workspace->path), true);
-        $directory = Directory::get($workspace->path, $directoryName);
+        $directoryName = $this->multiChoice('Which directory do you want to open ?', Directory::only('name', null, $workspace), true);
+        $directory = Directory::get($workspace, $directoryName);
 
         $directory->open();
 
