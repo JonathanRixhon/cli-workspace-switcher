@@ -20,6 +20,7 @@ class Directory
     public function open()
     {
         shell_exec(sprintf('code -n %s', $this->path));
-        shell_exec(sprintf('open -a iTerm %s', $this->path));
+
+        if ($this->file->isDir()) shell_exec(sprintf('open -a iTerm %s', $this->path));
     }
 }

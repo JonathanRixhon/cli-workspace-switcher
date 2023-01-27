@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
+use Jonathanrixhon\CliWorkspaceSwitcher\Models\Workspace;
 use Jonathanrixhon\CliWorkspaceSwitcher\Services\InputOutput;
 use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasMultipleChoice;
 use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasWorkspaceMethods;
@@ -24,8 +25,9 @@ class WorkspaceConfig extends Command
     protected $errors = [];
     protected $authorizedActions = [
         'add',
+        'ignore',
         'reset',
-        'remove'
+        'remove',
     ];
     /**
      * The name of the command (the part after "bin/demo").
@@ -81,6 +83,7 @@ class WorkspaceConfig extends Command
         $this->io->title($title);
 
         while (!$stop) {
+
             $name = $this->io->ask('Please add a workspace name');
             if (!$name) {
                 $path = $this->io->wrong('Please add a name');
@@ -95,7 +98,7 @@ class WorkspaceConfig extends Command
                 return Command::FAILURE;
             }
 
-            $this->addWorkSpace([
+            Workspace::create([
                 'name' => $name,
                 'path' => $path,
             ]);
@@ -104,30 +107,15 @@ class WorkspaceConfig extends Command
         }
     }
 
-    public function addWorkSpace($workspace)
-    {
-        $jsonContent = getConfig();
-        $workspaces = $jsonContent['workspaces'] ?? [];
-        $this->searchForWorkspaceName($workspace['name']);
-        $index = $this->searchForWorkspaceName($workspace['name']);
-
-        if (!is_null($index)) {
-            $workspaces[$index] = $workspace;
-        } else {
-            $workspaces[] = $workspace;
-        }
-
-        $jsonContent['workspaces'] = $workspaces;
-        $this->save($jsonContent);
-    }
-
     protected function remove()
     {
         $title = 'This command allows you to remove workspaces';
         $this->io->title($title);
 
-        $workspaces = getConfig()['workspaces'];
-        $this->removeWorkspace($this->multiChoice('Please choose a wokspace to remove', getOnlyKeys($workspaces, 'name'), true));
+        $workspaceName = $this->multiChoice('Please choose a wokspace to remove', Workspace::only('name'), true);
+        if ($workspaceName === 'Cancel') return $this->io->text('Command cancelled');
+        $workspace = Workspace::get($workspaceName);
+        if (Workspace::remove($workspace)) $this->io->right('The workspace ' . $workspace->name . 'Has been removed');
     }
 
     protected function reset()
@@ -136,33 +124,17 @@ class WorkspaceConfig extends Command
         $this->io->title($title);
 
         if ($this->io->confirm('Are you sure you want to remove all workspaces ?')) {
-            $this->removeWorkspace('all');
+            Workspace::remove(null, true);
+            $this->io->right('All workspaces have been removed');
         } else {
             $this->io->right('Command cancelled');
         }
     }
 
-    protected function removeWorkspace($workspace)
+    protected function ignore()
     {
-        $jsonContent = getConfig();
+        $title = 'This command allows you to ignore certain files or directories';
+        $this->io->title($title);
 
-        if ($workspace === 'Cancel') return $this->io->text('Command cancelled');
-        if ($workspace === 'all') {
-            unset($jsonContent['workspaces']);
-            $this->save($jsonContent);
-            return $this->io->right(sprintf('All workspaces removed successfully', $workspace));
-        } else {
-            unset($jsonContent['workspaces'][$this->searchForWorkspaceName($workspace)]);
-            $this->save($jsonContent);
-            return $this->io->right(sprintf('The workspace %s has been deleted successfully', $workspace));
-        };
-    }
-
-    protected function save($newJson)
-    {
-        $jsonContent = array_merge($jsonContent ?? [], $newJson);
-        $file = fopen($this->configFile->getPathName(), 'w');
-        fwrite($file, json_encode($jsonContent));
-        fclose($file);
     }
 }
