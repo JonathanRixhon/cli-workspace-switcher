@@ -2,46 +2,36 @@
 
 namespace Jonathanrixhon\CliWorkspaceSwitcher\Commands\Workspaces;
 
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-use Jonathanrixhon\CliWorkspaceSwitcher\Services\InputOutput;
+use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Command;
+use Jonathanrixhon\CliWorkspaceSwitcher\Models\Workspace;
+
 
 class WorkspaceList extends Command
 {
-    protected $io;
-    protected $input;
-    protected $output;
     /**
      * The name of the command (the part after "bin/demo").
      *
      * @var string
      */
-    protected static $defaultName = 'workspace:list';
+    protected static $defaultName = 'workspaces:list';
 
     /**
      * The command description shown when running "php bin/demo list".
      *
      * @var string
      */
-    protected static $defaultDescription = 'List all workspaces';
+    protected static $defaultDescription = 'Lists the workspaces';
 
-    /**
-     * Execute the command
-     *
-     * @param  InputInterface  $input
-     * @param  OutputInterface $output
-     * @return int 0 if everything went fine, or an exit code.
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function handle(): int
     {
-        $this->input = $input;
-        $this->output = $output;
-        $this->io = new InputOutput($this->input, $this->output);
-        $workspaces = getConfig()['workspaces'] ?? [];
+        $this->io->table(['Names', 'Paths'], $this->getTable(Workspace::all()));
+        return $this->command::SUCCESS;
+    }
 
-        $this->io->table(['Names','Paths'],getOnlyKeys($workspaces,['name','path']));
-
-        return Command::SUCCESS;
+    protected function getTable($workspaces)
+    {
+        return array_map(function ($workspace) {
+            return [$workspace->name, $workspace->path];
+        }, $workspaces);
     }
 }

@@ -2,65 +2,36 @@
 
 namespace Jonathanrixhon\CliWorkspaceSwitcher\Commands\Workspaces;
 
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-use Jonathanrixhon\CliWorkspaceSwitcher\Models\Directory;
+use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Command;
 use Jonathanrixhon\CliWorkspaceSwitcher\Models\Workspace;
-use Jonathanrixhon\CliWorkspaceSwitcher\Services\InputOutput;
-use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasMultipleChoice;
+use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasDirectorySelector;
+use Jonathanrixhon\CliWorkspaceSwitcher\Commands\Concerns\HasWorkspaceSelector;
 
 class WorkspaceOpen extends Command
 {
-    use HasMultipleChoice;
-
-    protected $io;
-    protected $input;
-    protected $output;
-    protected $currentWorkspace;
-    protected $workspaces;
+    use HasWorkspaceSelector, HasDirectorySelector;
     /**
      * The name of the command (the part after "bin/demo").
      *
      * @var string
      */
-    protected static $defaultName = 'workspace';
+    protected static $defaultName = 'workspaces:open';
 
     /**
      * The command description shown when running "php bin/demo list".
      *
      * @var string
      */
-    protected static $defaultDescription = 'List all workspaces';
+    protected static $defaultDescription = 'Opens a workspace';
 
-    /**
-     * Execute the command
-     *
-     * @param  InputInterface  $input
-     * @param  OutputInterface $output
-     * @return int 0 if everything went fine, or an exit code.
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function handle(): int
     {
-        $this->input = $input;
-        $this->output = $output;
-        $this->io = new InputOutput($this->input, $this->output);
-
-        $workspaceName = $this->multiChoice('Which workspace do you want to open ?', Workspace::only('name'), true);
-        $workspace = Workspace::get($workspaceName);
-
-        if ($workspaceName === 'Cancel') {
-            $this->io->wrong('Command cancelled');
-            return Command::FAILURE;
-        };
-
-        $directoryName = $this->multiChoice('Which directory do you want to open ?', Directory::only('name', null, $workspace), true);
-        $directory = Directory::get($workspace, $directoryName);
+        $this->io->title('This command allows you to open workspaces');
+        if (!($workspace = $this->selectWorkspace('Please choose a workspace to open'))) return null;
+        if (!($directory = $this->selectDirectory('Please choose a directory to open', $workspace->directories()))) return null;
 
         $directory->open();
 
-
-
-        return Command::SUCCESS;
+        return $this->command::SUCCESS;
     }
 }
