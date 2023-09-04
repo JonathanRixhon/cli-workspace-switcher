@@ -2,35 +2,33 @@
 
 namespace Jonathanrixhon\CliWorkspaceSwitcher\Models;
 
-use Jonathanrixhon\CliWorkspaceSwitcher\Items\Workspace;
-use Jonathanrixhon\CliWorkspaceSwitcher\Items\Directory as DirectoryItem;
+use SplFileInfo;
+use Jonathanrixhon\CliWorkspaceSwitcher\Models\Workspace;
 
 class Directory
 {
+    public string $path;
+    public SplFileInfo $file;
+    public string $name;
+    public ?Workspace $workspace;
 
-    public static function get(Workspace $workspace, $name = ''): DirectoryItem
+    public function __construct($path, $workspace = null)
     {
-        foreach (self::all($workspace) as $directory) {
-            if ($directory->name === $name) {
-                return $directory;
-            }
-        }
-    }
-    public static function all(Workspace $workspace): array
-    {
-        $directories = [];
-        $ignored = $workspace->ignored ?? [];
-
-        foreach (array_diff(scandir($workspace->path), array('.', '..', '.DS_Store')) as $directory) {
-            $dirItem = new DirectoryItem($workspace->path . '/' . $directory);
-            if (array_search($dirItem->path, array_column($ignored, 'path')) === false) $directories[] = $dirItem;
-        }
-
-        return $directories;
+        $this->path = $path;
+        $this->file = new SplFileInfo($path);
+        $this->name = $this->file->getBasename();
+        $this->workspace = $workspace;
+        $this->path = $path;
     }
 
-    public static function only($value = null, $index_key = null, Workspace $workspace = null): array
+    public function open()
     {
-        return array_column(self::all($workspace), $value, $index_key);
+        shell_exec(sprintf('code -n %s', $this->path));
+        if ($this->file->isDir()) shell_exec(sprintf('open -a iTerm %s', $this->path));
+    }
+    
+    public static function all($path, $workspace = null){
+        $directories = directoriesFrom($path);
+        return array_map(fn($dir) => new static($dir, $workspace), $directories);
     }
 }

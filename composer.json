@@ -17,6 +17,7 @@
         }
     ],
     "require": {
-        "symfony/console": "^6.2"
+        "symfony/console": "^6.2",
+        "symfony/process": "^6.3"
     }
 }
